@@ -26,6 +26,17 @@ def question1():
 
     plt.figure(figsize=(8, 6))
     plt.scatter(df["stress_level"], df["exam_score"], c=colors, alpha=0.7)
+    plt.legend(
+        handles=[
+            plt.Line2D([], [], marker='o', color='red',
+                       linestyle='', label='Female'),
+            plt.Line2D([], [], marker='o', color='black',
+                       linestyle='', label='Male'),
+            plt.Line2D([], [], marker='o', color='gray',
+                       linestyle='', label='Other')
+        ],
+        title="Gender"
+    )
 
     plt.xlabel("Stress Level")
     plt.ylabel("Exam Score")
@@ -64,10 +75,16 @@ def question2():
     )
     summary = df.groupby("family_support_level")[
         "exam_score"].mean().reindex(["Low", "Medium", "High"])
-
+    cmap = plt.cm.viridis
+    colors = cmap([0.2, 0.5, 0.8])
     plt.figure(figsize=(8, 6))
-    plt.bar(summary.index.astype(str), summary.values)
-
+    plt.bar(
+        summary.index.astype(str),
+        summary.values,
+        color=colors,
+        edgecolor="black",
+        linewidth=1
+    )
     plt.xlabel("Family Support Level")
     plt.ylabel("Average Exam Score")
     plt.title("Average Exam Score by Family Support Level")
@@ -76,15 +93,6 @@ def question2():
 
 
 def question3():
-    plt.figure(figsize=(8, 6))
-    plt.hist(df["sleep_hours"], bins=15, edgecolor="black")
-
-    plt.xlabel("Sleep Hours")
-    plt.ylabel("Number of Students")
-    plt.title("Histogram of Sleep Hours")
-    plt.grid(axis="y", alpha=0.3)
-    plt.show()
-
     def sleep_category(hours):
         if hours < 6:
             return "Low Sleep (<6h)"
@@ -95,16 +103,66 @@ def question3():
 
     df["sleep_group"] = df["sleep_hours"].apply(sleep_category)
 
-    df.boxplot(
-        column="exam_score",
-        by="sleep_group",
-        grid=False
+    order = ["Low Sleep (<6h)", "Normal Sleep (6–8h)", "High Sleep (>8h)"]
+    df["sleep_group"] = pd.Categorical(
+        df["sleep_group"], categories=order, ordered=True)
+
+    sleep_palette = {
+        "Low Sleep (<6h)": "salmon",
+        "Normal Sleep (6–8h)": "skyblue",
+        "High Sleep (>8h)": "lightgreen",
+    }
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+    axes[0].hist(
+        df["sleep_hours"],
+        bins=15,
+        edgecolor="black",
+        color="lightsteelblue",
+        alpha=0.85
     )
 
-    plt.xlabel("Sleep Group")
-    plt.ylabel("Exam Score")
-    plt.title("Exam Score Distribution by Sleep Group")
-    plt.suptitle("")
+    mean_sleep = df["sleep_hours"].mean()
+    median_sleep = df["sleep_hours"].median()
+    axes[0].axvline(mean_sleep, linestyle="--", linewidth=2,
+                    label=f"Mean = {mean_sleep:.2f}")
+    axes[0].axvline(median_sleep, linestyle=":", linewidth=2,
+                    label=f"Median = {median_sleep:.2f}")
+
+    axes[0].set_xlabel("Sleep Hours")
+    axes[0].set_ylabel("Number of Students")
+    axes[0].set_title("Histogram of Sleep Hours", fontsize=13)
+    axes[0].grid(axis="y", linestyle="--", alpha=0.4)
+    axes[0].legend()
+
+    sns.boxplot(
+        data=df,
+        x="sleep_group",
+        y="exam_score",
+        order=order,
+        palette=sleep_palette,
+        ax=axes[1]
+    )
+    sns.stripplot(
+        data=df,
+        x="sleep_group",
+        y="exam_score",
+        order=order,
+        color="black",
+        jitter=0.2,
+        alpha=0.35,
+        size=3,
+        ax=axes[1]
+    )
+
+    axes[1].set_xlabel("Sleep Group")
+    axes[1].set_ylabel("Exam Score")
+    axes[1].set_title("Exam Score by Sleep Group", fontsize=13)
+    axes[1].grid(axis="y", linestyle="--", alpha=0.4)
+
+    fig.suptitle("Sleep Pattern and Academic Performance", fontsize=14)
+    plt.tight_layout()
     plt.show()
 
 
@@ -135,29 +193,8 @@ def question4():
 
 
 def question5():
-    exam_score_not_working = df.loc[
-        df["part_time_job"] == "No",
-        "exam_score"
-    ]
-
-    exam_score_working = df.loc[
-        df["part_time_job"] == "Yes",
-        "exam_score"
-    ]
-
-    stress_not_working = df.loc[
-        df["part_time_job"] == "No",
-        "stress_level"
-    ]
-
-    stress_working = df.loc[
-        df["part_time_job"] == "Yes",
-        "stress_level"
-    ]
-
     base_df = df[["part_time_job", "exam_score", "stress_level"]].copy()
 
-    # تبدیل به فرمت long (درست و امن)
     violin_data = pd.melt(
         base_df,
         id_vars="part_time_job",
@@ -166,14 +203,32 @@ def question5():
         value_name="value"
     )
 
-    # رنگ‌ها
-    palette = {
-        "exam_score": "green",
-        "stress_level": "orange"
-    }
-
+    palette = {"exam_score": "green", "stress_level": "orange"}
     order = ["No", "Yes"]
     hue_order = ["exam_score", "stress_level"]
+
+    plt.figure(figsize=(8, 6))
+    sns.violinplot(
+        data=violin_data,
+        x="part_time_job",
+        y="value",
+        hue="metric",
+        split=True,
+        inner="quartile",
+        palette=palette,
+        cut=0,
+        order=order,
+        hue_order=hue_order,
+        scale="width"
+    )
+
+    plt.ylim(0, 100)
+    plt.yticks(range(0, 101, 10))
+    plt.xlabel("Part-Time Job (No / Yes)")
+    plt.ylabel("Value (0–100 scale; Exam vs Stress)")
+    plt.title("Split Violin: Exam Score vs Stress Level by Part-Time Job")
+    plt.grid(axis="y", alpha=0.3)
+    plt.show()
 
     plt.figure(figsize=(8, 6))
     sns.violinplot(
@@ -245,8 +300,16 @@ def question6():
         palette=palette
     )
 
-    for i, bar in enumerate(ax.patches):
-        row = summary.iloc[i]
+    ax.legend(
+        title="School_Resources",
+        loc="center",
+        bbox_to_anchor=(0.5, 0.5),
+        ncol=1
+    )
+
+    plt.subplots_adjust(top=0.85)
+
+    for bar, (_, row) in zip(ax.patches, summary.iterrows()):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 0.5,
@@ -260,21 +323,153 @@ def question6():
     plt.ylabel("Average Exam Score")
     plt.title(
         "Effect of Teacher Quality and School Resources\n"
-        "on High-Stress Students"
+        "on High-Stress Students",
+        pad=30
     )
     plt.grid(axis="y", alpha=0.3)
     plt.show()
 
 
-def question7(): pass
-def question8(): pass
-def question9(): pass
-def question10(): pass
-def question11(): pass
+def question7():
+
+    def exercise_category(x):
+        if x in [0, 1, 2]:
+            return "Low"
+        elif x in [3, 4]:
+            return "Medium"
+        else:
+            return "High"
+
+    df["physical_activity_level"] = df["exercise_frequency"].apply(
+        exercise_category)
+
+    sns.boxplot(
+        data=df,
+        x="physical_activity_level",
+        y="stress_level",
+        order=["Low", "Medium", "High"],
+        boxprops={"alpha": 0.5}
+    )
+
+    sns.stripplot(
+        data=df,
+        x="physical_activity_level",
+        y="stress_level",
+        order=["Low", "Medium", "High"],
+        jitter=0.2
+    )
+
+    plt.title("Relationship between Physical Activity and Stress Level")
+    plt.xlabel("Physical Activity Level")
+    plt.ylabel("Stress Level")
+    plt.show()
 
 
-question1()
-question2()
-question3()
-question4()
-question5()
+def question8():
+    df["total_media_hours"] = df["social_media_hours"] + df["netflix_hours"]
+    mean_total_media = df["total_media_hours"].mean()
+    std_total_media = df["total_media_hours"].std()
+
+    def classify_peer_influence(x):
+        if x < mean_total_media - std_total_media:
+            return "Positive"
+        elif mean_total_media - std_total_media <= x <= mean_total_media + std_total_media:
+            return "Neutral"
+        else:
+            return "Negative"
+    df["peer_influence"] = df["total_media_hours"].apply(
+        classify_peer_influence)
+
+    sns.kdeplot(
+        data=df,
+        x="exam_score",
+        hue="peer_influence",
+        hue_order=["Negative", "Neutral", "Positive"],
+        fill=True,
+        alpha=0.3,
+        common_norm=False
+
+    )
+
+    plt.title("Distribution of Exam Scores by Peer Influence")
+    plt.xlabel("Exam Score")
+    plt.ylabel("Density")
+    plt.show()
+
+
+def question9():
+
+    gender_palette = {
+        "Male": "blue",
+        "Female": "red"
+    }
+
+    gender_grid = sns.FacetGrid(
+        data=df,
+        col="gender",
+        col_order=["Male", "Female"]
+    )
+    gender_grid.map_dataframe(
+        sns.scatterplot,
+        x="study_hours_per_day",
+        y="exam_score",
+        hue="gender",
+        palette=gender_palette,
+        alpha=0.7,
+        s=40
+    )
+    gender_grid.fig.suptitle(
+        "Relationship Between Study Hours and Exam Score by Gender",
+        fontsize=14
+    )
+    gender_grid.set_axis_labels(
+        "Study Hours per Day",
+        "Exam Score"
+    )
+    plt.subplots_adjust(top=0.85)
+    plt.show()
+
+
+def question10():
+
+    sns.scatterplot(
+        data=df,
+        x="study_hours_per_day",
+        y="exam_score",
+        size="attendance_percentage",
+        sizes=(20, 300),
+        alpha=0.6,
+        hue="attendance_percentage",
+        palette="viridis"
+
+    )
+
+    plt.title("Study Hours vs Exam Score with Attendance as Bubble Size")
+    plt.xlabel("Study Hours per Day")
+    plt.ylabel("Exam Score")
+    plt.show()
+
+
+def question11():
+    counts = df["extracurricular_participation"].value_counts()
+    labels = counts.index
+    sizes = counts.values
+    colors = ["lightgreen", "orange"]
+
+    plt.figure(figsize=(6, 6))
+    plt.pie(
+        sizes,
+        labels=labels,
+        colors=colors,
+        autopct="%1.1f%%",
+        startangle=90
+    )
+
+    centre_circle = plt.Circle((0, 0), 0.70, fc="white")
+    plt.gca().add_artist(centre_circle)
+    plt.title("Participation in Extracurricular Activities")
+    plt.tight_layout()
+    plt.show()
+
+
+question7()
