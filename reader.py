@@ -230,29 +230,6 @@ def question5():
     plt.grid(axis="y", alpha=0.3)
     plt.show()
 
-    plt.figure(figsize=(8, 6))
-    sns.violinplot(
-        data=violin_data,
-        x="part_time_job",
-        y="value",
-        hue="metric",
-        split=True,
-        inner="quartile",
-        palette={"exam_score": "green", "stress_level": "orange"},
-        cut=0,
-        order=order,
-        hue_order=hue_order,
-        scale="width"
-    )
-
-    plt.ylim(0, 100)
-    plt.yticks(range(0, 101, 10))
-    plt.xlabel("Part-Time Job (No / Yes)")
-    plt.ylabel("Value (0–100 scale; Exam vs Stress)")
-    plt.title("Split Violin: Exam Score vs Stress Level by Part-Time Job")
-    plt.grid(axis="y", alpha=0.3)
-    plt.show()
-
 
 def question6():
     high_stress_df = df[df["stress_level"] > 70].copy()
@@ -398,7 +375,6 @@ def question8():
 
 
 def question9():
-
     gender_palette = {
         "Male": "blue",
         "Female": "red"
@@ -472,4 +448,14 @@ def question11():
     plt.show()
 
 
+question1()
+question2()
+question3()
+question4()
+question5()
+question6()
 question7()
+question8()
+question9()
+question10()
+question11()
