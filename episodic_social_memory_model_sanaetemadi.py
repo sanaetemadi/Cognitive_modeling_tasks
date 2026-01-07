@@ -49,9 +49,6 @@ def plot_memory_strength_over_time(df):
 
 
 def plot_rehearsal_effect(df):
-    """
-    Compare final memory strength for rehearsed vs non-rehearsed events.
-    """
     plt.figure()
 
     df_no_rehearsal = df[df["rehearsal"] == 0]
@@ -79,9 +76,7 @@ def plot_rehearsal_effect(df):
 
 
 def plot_context_dependent_retrieval(df, similarity_high=0.8, similarity_low=0.3):
-    """
-    Compare retrieval strength under high vs low context similarity.
-    """
+
     plt.figure()
 
     recall_high = df["final_memory_strength"] * similarity_high
@@ -110,6 +105,6 @@ def plot_context_dependent_retrieval(df, similarity_high=0.8, similarity_low=0.3
     plt.show()
 
 
-plot_context_dependent_retrieval(df)
-plot_rehearsal_effect(df)
 plot_memory_strength_over_time(df)
+plot_rehearsal_effect(df)
+plot_context_dependent_retrieval(df)
